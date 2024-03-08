@@ -4,7 +4,7 @@ from rest_framework.pagination import LimitOffsetPagination
 
 from .permissions import IsAuthorAdminModeratorOrReadOnly
 from reviews.models import Categories, Titles, Genres
-from .serializers import ReviewSerializer
+from .serializers import ReviewsSerializer
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -20,7 +20,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    serializer_class = ReviewSerializer
+    serializer_class = ReviewsSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
     pagination_class = LimitOffsetPagination
 
