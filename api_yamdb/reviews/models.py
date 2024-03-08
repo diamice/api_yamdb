@@ -16,5 +16,5 @@ class Titles(models.Model):
     pass
 
 
-class Review(models.Model):
+class Reviews(models.Model):
     pass
