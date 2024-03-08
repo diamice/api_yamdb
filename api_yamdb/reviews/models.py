@@ -14,3 +14,7 @@ class Genres(models.Model):
 
 class Titles(models.Model):
     pass
+
+
+class Review(models.Model):
+    pass
