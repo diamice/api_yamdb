@@ -19,7 +19,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
     pass
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
     pagination_class = LimitOffsetPagination
