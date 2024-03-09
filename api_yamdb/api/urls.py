@@ -10,7 +10,7 @@ router_v1.register('titles', TitlesViewSet, basename='titles')
 router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewsViewSet,
-    basename='title_id'
+    basename='reviews'
 )
 
 urlpatterns = [

@@ -19,8 +19,9 @@ class Titles(models.Model):
 
 
 class Reviews(models.Model):
+    """Модель отзывов"""
     text = models.TextField(
-        verbose_name='Текс отзыва',
+        verbose_name='Текст отзыва',
     )
     title = models.ForeignKey(
         Titles,
@@ -39,10 +40,11 @@ class Reviews(models.Model):
         verbose_name='Дата публикации',
     )
     score = models.IntegerField(
-        validators = [
-            MaxValueValidator(10),
+        validators=[
             MinValueValidator(1),
-        ]
+            MaxValueValidator(10),
+        ],
+        verbose_name='Оценка',
     )
 
     class Meta:
@@ -56,4 +58,3 @@ class Reviews(models.Model):
 
     def __str__(self):
         return self.text
-
