@@ -1,7 +1,17 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth import get_user_model
 
-User = get_user_model()
+CHOICES = (
+    ('admin', 'администратор'),
+    ('moderator', 'модератор'),
+    ('user', 'пользователь')
+)
+
+
+class MyUser(AbstractUser):
+    role = models.CharField(
+        'Роль', max_length=16, choices=CHOICES, default='user')
+    bio = models.TextField('Биография',null=True, blank=True)
 
 
 class Categories(models.Model):
