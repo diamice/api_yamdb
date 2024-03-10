@@ -14,7 +14,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Категорий."""
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
-    permission_classes = []  # will fix it after classes will added
+    permission_classes = [IsAuthorAdminModeratorOrReadOnly]  # will fix it after classes will added
     pagination_class = LimitOffsetPagination
 
 
@@ -22,14 +22,14 @@ class GenresViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Жанров."""
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    permission_classes = []  # will fix it after classes will added
+    permission_classes = [IsAuthorAdminModeratorOrReadOnly]  # will fix it after classes will added
     pagination_class = LimitOffsetPagination
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Произведений."""
     serializer_class = TitlesSerializer
-    permission_classes = []  # will fix it after classes will added
+    permission_classes = [IsAuthorAdminModeratorOrReadOnly]  # will fix it after classes will added
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
