@@ -1,4 +1,5 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.response import Response
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 
 from reviews.models import MyUser
@@ -44,8 +45,10 @@ class MyUserSerializer(serializers.ModelSerializer):
             or self.context['request'].data.get('username') == ''
             or self.context['request'].data.get('username') == None
         ):
-            raise serializers.ValidationError(
-                'Поле "username" не может быть пустым.'
+            return Response(
+                {"username": ["Это поле не может быть пустым."]},
+                status=status.HTTP_400_BAD_REQUEST
+                # 'Поле "username" не может быть пустым.'
                 # 'оно не соответствует требованиям'
             )
 
@@ -57,10 +60,14 @@ class MyUserSerializer(serializers.ModelSerializer):
             or self.context['request'].data.get('email') == ''
             or self.context['request'].data.get('email') == None
         ):
-            raise serializers.ValidationError(
-                'Поле "email" не можеты быть пустым.'
-                # 'оно не соответствует требованиям'
+            return Response(
+                {"email": ["Это поле не может быть пустым."]},
+                status=status.HTTP_400_BAD_REQUEST
             )
+            # raise serializers.ValidationError(
+            #     'Поле "email" не можеты быть пустым.'
+            #     # 'оно не соответствует требованиям'
+            # )
 
         return value
 
@@ -84,10 +91,26 @@ class MyUserRegistration(MyUserSerializer):
     class Meta:
         model = MyUser
         fields = ('email', 'username')
-        # validators = [
-        #     UniqueTogetherValidator(
-        #         queryset=MyUser.objects.all(),
-        #         fields=('email', 'username'),
-        #         message='Пользователь уже зарегистрирован.'
-        #     )
-        # ]
+        validators = [
+            UniqueTogetherValidator(
+                queryset=MyUser.objects.all(),
+                fields=('email', 'username'),
+                message='Пользователь уже зарегистрирован.'
+            )
+        ]
+
+
+class MyUserRegistered(serializers.ModelSerializer):
+
+    class Meta:
+        model = MyUser
+        fields = ('email', 'username')
+
+    def validate_email(self, value):
+        username = self.context['request'].data.get('username')
+        user = MyUser.objects.get(username=username)
+        if value != user.email:
+            raise serializers.ValidationError(
+                f'Для пользователя {username} зарегистрирована '
+                'другая электронная почта.'
+            )

@@ -10,7 +10,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Categories, Titles, Genres, MyUser
 from .permissions import IsAdmin, IsUAuthenticatedAndPatchMethod
-from .serializers import MyUserRegistration, MyUserUsersSerializer
+from .serializers import (MyUserRegistered, MyUserRegistration,
+                          MyUserUsersSerializer)
 from .viewsets import CreateViewSet, ListCreateViewSet, RetievePatchViewSet
 
 
@@ -35,15 +36,25 @@ class CreateUserViewSet(CreateViewSet):
     serializer_class = MyUserRegistration
     permission_classes = (AllowAny,)
 
+    def get_serializer_class(self):
+        username = self.request.data.get('username')
+        if MyUser.objects.filter(username=username).exists():
+            return MyUserRegistered
+        return MyUserRegistration
+
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
         username = request.data.get('username')
         email = request.data.get('email')
-        user = get_object_or_404(MyUser, username=username)
+
+        if not MyUser.objects.filter(username=username).exists():
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+        else:
+            serializer.is_valid(raise_exception=True)
+
+        headers = self.get_success_headers(serializer.data)
+        user = get_object_or_404(MyUser.objects.all(), username=username)
         code = default_token_generator.make_token(user)
 
         send_mail(
