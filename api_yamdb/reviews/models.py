@@ -85,3 +85,29 @@ class Reviews(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class Comments(models.Model):
+    review = models.ForeignKey(
+        Reviews,
+        on_delete=models.CASCADE,
+        verbose_name='Отзыв',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор комментария',
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата комментария',
+    )
+    text = models.TextField(
+        verbose_name='Текст комментария',
+    )
+
+    class Meta:
+        ordering = ['-pub_date'],
+
+    def __str__(self):
+        return self.text
