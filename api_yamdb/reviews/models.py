@@ -1,9 +1,22 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 User = get_user_model()
+
+ROLES_CHOICES = (
+    ('admin', 'администратор'),
+    ('moderator', 'модератор'),
+    ('user', 'пользователь')
+)
+
+
+class MyUser(AbstractUser):
+    role = models.CharField(
+        'Роль', max_length=16, choices=ROLES_CHOICES, default='user')
+    bio = models.TextField('Биография',null=True, blank=True)
 
 
 class Categories(models.Model):
