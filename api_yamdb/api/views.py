@@ -1,6 +1,8 @@
-from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
@@ -9,22 +11,40 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Categories, Titles, Genres, MyUser
-from .permissions import IsAdmin, IsUAuthenticatedAndPatchMethod, IsAuthorAdminModeratorOrReadOnly
-from .serializers import (MyUserRegistered, MyUserRegistration,
-                          MyUserUsersSerializer, ReviewsSerializer)
+from .permissions import (IsAdmin, IsUAuthenticatedAndPatchMethod,
+                          IsAuthorAdminModeratorOrReadOnly)
+from .serializers import (
+    CategoriesSerializer, TitlesSerializer, GenresSerializer,
+    MyUserRegistered, MyUserRegistration, MyUserUsersSerializer,
+    ReviewsSerializer
+)
 from .viewsets import CreateViewSet, ListCreateViewSet, RetievePatchViewSet
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
-    pass
+    """ViewSet для модели Категорий."""
+    queryset = Categories.objects.all()
+    serializer_class = CategoriesSerializer
+    permission_classes = []  # will fix it after classes will added
+    pagination_class = LimitOffsetPagination
 
 
 class GenresViewSet(viewsets.ModelViewSet):
-    pass
+    """ViewSet для модели Жанров."""
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+    permission_classes = []  # will fix it after classes will added
+    pagination_class = LimitOffsetPagination
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    pass
+    """ViewSet для модели Произведений."""
+    serializer_class = TitlesSerializer
+    permission_classes = []  # will fix it after classes will added
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        return Titles.objects.annotate(rating=Avg('reviews__score'))
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
