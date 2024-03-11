@@ -88,6 +88,7 @@ class Reviews(models.Model):
 
 
 class Comments(models.Model):
+    """Модель комментариев"""
     review = models.ForeignKey(
         Reviews,
         on_delete=models.CASCADE,
