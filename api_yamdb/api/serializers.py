@@ -2,7 +2,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 
-from reviews.models import MyUser, Titles, Genres, Categories, Reviews
+from reviews.models import MyUser, Titles, Genres, Categories, Reviews, Comments
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -45,6 +45,7 @@ class TitlesSerializer(serializers.ModelSerializer):
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
+    """Сериалайзер для модели Отзывов"""
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -56,8 +57,24 @@ class ReviewsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
         model = Reviews
+        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
+
+
+class CommentsSerializer(serializers.ModelSerializer):
+    """Сериалайзер для модели Комментариев"""
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+    )
+    review = serializers.SlugRelatedField(
+        slug_field='text',
+        read_only=True,
+    )
+
+    class Meta:
+        model = Comments
+        fields = ('id', 'text', 'author', 'pub_date')
 
 
 class MyUserSerializer(serializers.ModelSerializer):
@@ -169,3 +186,4 @@ class MyUserRegistered(serializers.ModelSerializer):
                 f'Для пользователя {username} зарегистрирована '
                 'другая электронная почта.'
             )
+

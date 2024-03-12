@@ -16,7 +16,7 @@ from .permissions import (IsAdmin, IsUAuthenticatedAndPatchMethod,
 from .serializers import (
     CategoriesSerializer, TitlesSerializer, GenresSerializer,
     MyUserRegistered, MyUserRegistration, MyUserUsersSerializer,
-    ReviewsSerializer
+    ReviewsSerializer, CommentsSerializer
 )
 from .viewsets import CreateViewSet, ListCreateViewSet, RetievePatchViewSet
 
@@ -48,6 +48,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
+    """ViewSet для модели Отзывов."""
     serializer_class = ReviewsSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
     pagination_class = LimitOffsetPagination
@@ -60,6 +61,22 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
+
+
+class CommentsViewSet(viewsets.ModelViewSet):
+    """ViewSet для модели Комментариев."""
+    serializer_class = CommentsSerializer
+    permission_classes = [IsAuthorAdminModeratorOrReadOnly]
+    pagination_class = LimitOffsetPagination
+
+    def get_review(self):
+        return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
+    
+    def get_queryset(self):
+        return self.get_review().comments.select_related('author')
+    
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, review=self.get_review())
 
 
 class CreateUserViewSet(CreateViewSet):
