@@ -4,10 +4,11 @@ from rest_framework.pagination import LimitOffsetPagination
 from django.db.models import Avg
 
 from .permissions import IsAuthorAdminModeratorOrReadOnly
-from reviews.models import Categories, Titles, Genres
+from reviews.models import Categories, Genres, Reviews, Titles
 from .serializers import ReviewsSerializer
-from .serializers import (CategoriesSerializer,TitlesSerializer,
-                          GenresSerializer, ReviewsSerializer)
+from .serializers import (CategoriesSerializer, CommentsSerializer, 
+                          GenresSerializer, ReviewsSerializer,
+                          TitlesSerializer)
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -37,6 +38,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
+    """ViewSet для модели Отзывов."""
     serializer_class = ReviewsSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
     pagination_class = LimitOffsetPagination
@@ -49,3 +51,19 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
+
+    
+class CommentsViewSet(viewsets.ModelViewSet):
+    """ViewSet для модели Комментариев."""
+    serializer_class = CommentsSerializer
+    permission_classes = [IsAuthorAdminModeratorOrReadOnly]
+    pagination_class = LimitOffsetPagination
+
+    def get_review(self):
+        return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
+    
+    def get_queryset(self):
+        return self.get_review().comments.select_related('author')
+    
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, review=self.get_review())
