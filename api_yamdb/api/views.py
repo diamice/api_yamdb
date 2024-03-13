@@ -6,7 +6,7 @@ from django.db.models import Avg
 from .permissions import IsAuthorAdminModeratorOrReadOnly
 from reviews.models import Categories, Titles, Genres
 from .serializers import ReviewsSerializer
-from .serializers import (CategoriesSerializer,TitlesSerializer,
+from .serializers import (CategoriesSerializer, TitlesSerializer,
                           GenresSerializer, ReviewsSerializer)
 
 
