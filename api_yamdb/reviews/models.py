@@ -1,9 +1,22 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 User = get_user_model()
+
+ROLES_CHOICES = (
+    ('admin', 'администратор'),
+    ('moderator', 'модератор'),
+    ('user', 'пользователь')
+)
+
+
+class MyUser(AbstractUser):
+    role = models.CharField(
+        'Роль', max_length=16, choices=ROLES_CHOICES, default='user')
+    bio = models.TextField('Биография',null=True, blank=True)
 
 
 class Categories(models.Model):
@@ -82,6 +95,33 @@ class Reviews(models.Model):
                 name='unique_review',
             )
         ]
+
+    def __str__(self):
+        return self.text
+
+
+class Comments(models.Model):
+    """Модель комментариев"""
+    review = models.ForeignKey(
+        Reviews,
+        on_delete=models.CASCADE,
+        verbose_name='Отзыв',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор комментария',
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата комментария',
+    )
+    text = models.TextField(
+        verbose_name='Текст комментария',
+    )
+
+    class Meta:
+        ordering = ['-pub_date'],
 
     def __str__(self):
         return self.text
