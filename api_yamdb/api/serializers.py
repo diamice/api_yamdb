@@ -10,7 +10,8 @@ class MyUserSerializer(serializers.ModelSerializer):
     Общая модель для сериализаторов работы с пользователями.
     """
     
-    email = serializers.CharField(
+    email = serializers.RegexField(
+        regex=r'^[\w.\-]{1,25}@[\w.\-]{1,25}\.[\w]{1,25}',
         max_length=254,
         required=True,
         validators=[

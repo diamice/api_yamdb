@@ -103,16 +103,20 @@ def get_token(request):
 
     username = request.data.get('username')
     code = request.data.get('confirmation_code')
-    try:
-        get_object_or_404(MyUser, username=username)
-    except:
-        return Response(status.HTTP_400_BAD_REQUEST)
-    user = MyUser.objects.get(username=username)
+
+    if username is None:
+        return Response(
+            {"username": "Обязательное поле"},
+            status=status.HTTP_400_BAD_REQUEST
+    )
+
+    user = get_object_or_404(MyUser, username=username)
 
     if default_token_generator.check_token(user, code):
         token = AccessToken.for_user(user)
         user.is_active = True
         user.save()
-        return Response({"token": f"{token}"}, status.HTTP_200_OK)
+        return Response(
+            {"token": f"{token}"}, status=status.HTTP_200_OK)
 
-    return Response(status.HTTP_400_BAD_REQUEST)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
