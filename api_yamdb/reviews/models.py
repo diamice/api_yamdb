@@ -3,8 +3,7 @@ from django.db import models
 from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
-
-User = get_user_model()
+from .validators import validate_slug
 
 ROLES_CHOICES = (
     ('admin', 'администратор'),
@@ -16,30 +15,35 @@ ROLES_CHOICES = (
 class MyUser(AbstractUser):
     role = models.CharField(
         'Роль', max_length=16, choices=ROLES_CHOICES, default='user')
-    bio = models.TextField('Биография',null=True, blank=True)
+    bio = models.TextField('Биография', null=True, blank=True)
 
 
-class Categories(models.Model):
+User = get_user_model()
+
+
+class Category(models.Model):
     """Категории (типы) произведений."""
     name = models.CharField(max_length=256, verbose_name='Категория')
-    slug = models.SlugField(unique=True, max_length=50,
+    slug = models.SlugField(validators=[validate_slug],
+                            unique=True, max_length=50,
                             verbose_name='slug категории')
 
     def __str__(self):
         return self.name
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     """Категории жанров."""
     name = models.CharField(max_length=256, verbose_name='Жанр')
-    slug = models.CharField(unique=True, max_length=50,
+    slug = models.CharField(validators=[validate_slug],
+                            unique=True, max_length=50,
                             verbose_name='slug жанра')
 
     def __str__(self):
         return self.name
 
 
-class Titles(models.Model):
+class Title(models.Model):
     """
     Произведения, к которым пишут отзывы
     (определённый фильм, книга или песенка).
@@ -47,15 +51,24 @@ class Titles(models.Model):
     name = models.CharField(max_length=256,
                             verbose_name='Название произведения')
     year = models.IntegerField(verbose_name='Год выпуска')
-    description = models.TextField(verbose_name='Описание', blank=True, null=True)
-    genre = models.ManyToManyField(Genres, related_name='titles',
+    description = models.TextField(verbose_name='Описание', null=True, blank=True)
+    genre = models.ManyToManyField(Genre, through='TitleGenre',
                                    verbose_name='slug жанра')
-    category = models.ForeignKey(Categories, on_delete=models.SET_NULL,
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True,
                                  null=True, related_name='titles',
                                  verbose_name='slug категории')
 
     def __str__(self):
         return self.name
+
+
+class TitleGenre(models.Model):
+    """Связующая модель для произведений и жанров"""
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, verbose_name='название произведения')
+    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, verbose_name='название жанра')
+
+    def __str__(self):
+        return f'{self.title} - {self.genre}'
 
 
 class Reviews(models.Model):
@@ -64,10 +77,11 @@ class Reviews(models.Model):
         verbose_name='Текст отзыва',
     )
     title = models.ForeignKey(
-        Titles,
+        Title,
         max_length=200,
         on_delete=models.CASCADE,
         verbose_name='Произведение',
+        related_name='reviews'
     )
     author = models.ForeignKey(
         User,
@@ -106,6 +120,7 @@ class Comments(models.Model):
         Reviews,
         on_delete=models.CASCADE,
         verbose_name='Отзыв',
+        related_name='comments'
     )
     author = models.ForeignKey(
         User,

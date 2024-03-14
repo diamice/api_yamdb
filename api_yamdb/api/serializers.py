@@ -2,37 +2,37 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 
-from reviews.models import MyUser, Titles, Genres, Categories, Reviews, Comments
+from reviews.models import MyUser, Title, Genre, Category, Reviews, Comments
 
 
-class CategoriesSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     """Сериалайзер для модели Категорий."""
 
     class Meta:
-        model = Categories
+        model = Category
         fields = ('name', 'slug')
 
 
-class GenresSerializer(serializers.ModelSerializer):
+class GenreSerializer(serializers.ModelSerializer):
     """Сериалайзер для модели Жанров."""
 
     class Meta:
-        model = Genres
+        model = Genre
         fields = ('name', 'slug')
 
 
-class TitlesSerializer(serializers.ModelSerializer):
+class TitleSerializer(serializers.ModelSerializer):
     """Сериалайзер для модели Произведений."""
     category = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Categories.objects.all()
+        slug_field='slug', queryset=Category.objects.all()
     )
-    genres = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Genres.objects.all(), many=True
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Genre.objects.all(), many=True
     )
     rating = serializers.IntegerField(required=False)
 
     class Meta:
-        model = Titles
+        model = Title
         fields = (
             'id',
             'name',
@@ -42,6 +42,18 @@ class TitlesSerializer(serializers.ModelSerializer):
             'genre',
             'category'
         )
+
+    def to_representation(self, instance):
+        """Данные о категории и жанре для ответа."""
+        representation = super().to_representation(instance)
+        representation['category'] = {
+            'name': instance.category.name,
+            'slug': instance.category.slug,
+        }
+        representation['genre'] = [{'name': genre.name,
+                                    'slug': genre.slug}
+                                   for genre in instance.genre.all()]
+        return representation
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
@@ -81,7 +93,7 @@ class MyUserSerializer(serializers.ModelSerializer):
     """
     Общая модель для сериализаторов работы с пользователями.
     """
-    
+
     email = serializers.CharField(
         max_length=254,
         required=True,
@@ -113,9 +125,9 @@ class MyUserSerializer(serializers.ModelSerializer):
                 'Нельзя использовать "me" в качестве "username"')
 
         if (
-            not self.context['request'].data.get('username')
-            or self.context['request'].data.get('username') == ''
-            or self.context['request'].data.get('username') == None
+                not self.context['request'].data.get('username')
+                or self.context['request'].data.get('username') == ''
+                or self.context['request'].data.get('username') == None
         ):
             return Response(
                 {"username": ["Это поле не может быть пустым."]},
@@ -128,9 +140,9 @@ class MyUserSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if (
-            not self.context['request'].data.get('email')
-            or self.context['request'].data.get('email') == ''
-            or self.context['request'].data.get('email') == None
+                not self.context['request'].data.get('email')
+                or self.context['request'].data.get('email') == ''
+                or self.context['request'].data.get('email') == None
         ):
             return Response(
                 {"email": ["Это поле не может быть пустым."]},
@@ -173,7 +185,6 @@ class MyUserRegistration(MyUserSerializer):
 
 
 class MyUserRegistered(serializers.ModelSerializer):
-
     class Meta:
         model = MyUser
         fields = ('email', 'username')
@@ -186,4 +197,3 @@ class MyUserRegistered(serializers.ModelSerializer):
                 f'Для пользователя {username} зарегистрирована '
                 'другая электронная почта.'
             )
-

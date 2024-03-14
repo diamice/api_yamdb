@@ -31,11 +31,26 @@ class IsAdmin(permissions.BasePermission):
 
 class IsUAuthenticatedAndPatchMethod(permissions.BasePermission):
     """
-    Предоставляет доступ аутенитифированным пользователям на чтение 
-    и на изменение своих пользовательских данных.
+    Предоставляет доступ аутенитифированным пользователям на чтение
+     и на изменение своих пользовательских данных.
     """
     def has_permission(self, request, view):
         return (
             (request.method == 'patch' or request.method == 'get')
             and request.user.is_authenticated
         )
+
+
+class ReadOrAdminOnly(permissions.BasePermission):
+    """
+    Безопасные запросы для анонимного пользователя.
+    Или все запросы только для админа и суперпользователя.
+    """
+
+    def has_permission(self, request, view):
+        return (request.method in permissions.SAFE_METHODS
+                or (request.user.is_authenticated
+                    and (request.user.role == 'admin'
+                         or request.user.is_superuser)
+                    )
+                )
