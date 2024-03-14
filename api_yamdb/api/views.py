@@ -9,47 +9,44 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from django_filters.rest_framework import DjangoFilterBackend
 
-from reviews.models import Categories, Titles, Genres, MyUser
+from reviews.models import Category, Title, Genre, MyUser
 from .permissions import (IsAdmin, IsUAuthenticatedAndPatchMethod,
-                          IsAuthorAdminModeratorOrReadOnly)
+                          IsAuthorAdminModeratorOrReadOnly, ReadOrAdminOnly)
 from .serializers import (
-    CategoriesSerializer, TitlesSerializer, GenresSerializer,
+    CategorySerializer, TitleSerializer, GenreSerializer,
     MyUserRegistered, MyUserRegistration, MyUserUsersSerializer,
-    ReviewsSerializer, CommentsSerializer
-)
-from .viewsets import CreateViewSet, ListCreateViewSet, RetievePatchViewSet
+    ReviewsSerializer, CommentsSerializer)
+from .filters import TitleFilter
+from .viewsets import CreateViewSet, ListCreateViewSet, RetievePatchViewSet, CreateDestroyListViewSet
 from .permissions import IsAuthorAdminModeratorOrReadOnly
-from reviews.models import Categories, Titles, Genres
-from .serializers import ReviewsSerializer
-from .serializers import (CategoriesSerializer, TitlesSerializer,
-                          GenresSerializer, ReviewsSerializer)
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CreateDestroyListViewSet):
     """ViewSet для модели Категорий."""
-    queryset = Categories.objects.all()
-    serializer_class = CategoriesSerializer
-    permission_classes = [IsAuthorAdminModeratorOrReadOnly]  # will fix it after classes will added
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
 
 
-class GenresViewSet(viewsets.ModelViewSet):
+class GenreViewSet(CreateDestroyListViewSet):
     """ViewSet для модели Жанров."""
-    queryset = Genres.objects.all()
-    serializer_class = GenresSerializer
-    permission_classes = [IsAuthorAdminModeratorOrReadOnly]  # will fix it after classes will added
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
     pagination_class = LimitOffsetPagination
 
 
-class TitlesViewSet(viewsets.ModelViewSet):
+class TitleViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Произведений."""
-    serializer_class = TitlesSerializer
-    permission_classes = [IsAuthorAdminModeratorOrReadOnly]  # will fix it after classes will added
-    pagination_class = LimitOffsetPagination
+    serializer_class = TitleSerializer
+    permission_classes = [ReadOrAdminOnly]
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
     def get_queryset(self):
-        return Titles.objects.annotate(rating=Avg('reviews__score'))
+        return Title.objects.annotate(rating=Avg('reviews__score'))
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):

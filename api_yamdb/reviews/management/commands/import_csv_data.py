@@ -1,5 +1,7 @@
 import csv
 import os
+from django.db import models
+from django.db.models.fields.related import ForeignKey, ManyToManyField
 
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
@@ -26,26 +28,20 @@ class Command(BaseCommand):
             with open(path_to_selected_file, encoding='utf-8') as file:
                 reader = csv.DictReader(file)
                 for row in reader:
-                    for field in model._meta.fields:
-                        if isinstance(field, models.ForeignKey) or isinstance(field, models.ManyToManyField):
-                            id_field_name = field.name + '_id'
-                            if id_field_name in row:
-                                try:
-                                    id_value = row.pop(id_field_name)
-                                    related_model = field.remote_field.model
-                                    related_instance = related_model.objects.get(pk=id_value)
-                                    row[field.name] = related_instance
-                                except (KeyError, related_model.DoesNotExist) as e:
-                                    self.stdout.write(f'Error processing {field.name} id: {e}')
-                                    continue
-                    # for field in row:
-                    #     print(hasattr(model, field+'id'), field)
-                    #     # model_fields = [field.name for field in model._meta.get_fields()]
-                    #     # print(*[(hasattr(model, field), field) for field in row])
-                    #     # print(hasattr(model, field), field)
-                    #     # obj = model(**row)
-                    #     # obj.save()
-                    # break
+                    row_obj = model()
+                    for field in row:
+                        # print([fields.name for fields in model._meta.fields if type(fields) == ForeignKey or type(fields) == ManyToManyField])
+                        # print(field)
+                        if hasattr(row_obj, field + '_id'):
+                            setattr(row_obj, field + '_id', row.get(field))
+                        else:
+                            setattr(row_obj, field, row.get(field))
+                        # print(hasattr(model, field + '_id'), field, isinstance(field + '_id', ForeignKey))
+                        # model_fields = [field.name for field in model._meta.get_fields()]
+                        # print(*[(hasattr(model, field), field) for field in row])
+                        # print(hasattr(model, field), field)
+                    print(row_obj)
+                    row_obj.save()
                 self.stdout.write(f'Данные из модели {model} успешно импортированы')
         except FileNotFoundError as error:
             self.stdout.write(f'Файл с указанным названием {filename} не найден')
