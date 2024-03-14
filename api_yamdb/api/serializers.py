@@ -106,11 +106,20 @@ class MyUserRegistered(serializers.ModelSerializer):
         model = MyUser
         fields = ('email', 'username')
 
-    def validate_email(self, value):
-        username = self.context['request'].data.get('username')
-        user = MyUser.objects.get(username=username)
-        if value != user.email:
+    def validate(self, data):
+        user = MyUser.objects.get(username=data['username'])
+        if data['email'] != user.email:
             raise serializers.ValidationError(
-                f'Для пользователя {username} зарегистрирована '
+                f'Для пользователя {user.username} зарегистрирована '
                 'другая электронная почта.'
             )
+        return data
+
+    # def validate_email(self, value):
+    #     username = self.context['request'].data.get('username')
+    #     user = MyUser.objects.get(username=username)
+    #     if value != user.email:
+    #         raise serializers.ValidationError(
+    #             f'Для пользователя {username} зарегистрирована '
+    #             'другая электронная почта.'
+    #         )

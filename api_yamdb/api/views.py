@@ -51,7 +51,8 @@ class CreateUserViewSet(CreateViewSet):
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
         else:
-            serializer.is_valid(raise_exception=True)
+            serializer.validate(data=serializer.initial_data)
+            serializer._validated_data = serializer.initial_data
 
         headers = self.get_success_headers(serializer.data)
         user = get_object_or_404(MyUser.objects.all(), username=username)
@@ -102,7 +103,11 @@ def get_token(request):
 
     username = request.data.get('username')
     code = request.data.get('confirmation_code')
-    user = get_object_or_404(MyUser, username=username)
+    try:
+        get_object_or_404(MyUser, username=username)
+    except:
+        return Response(status.HTTP_400_BAD_REQUEST)
+    user = MyUser.objects.get(username=username)
 
     if default_token_generator.check_token(user, code):
         token = AccessToken.for_user(user)
