@@ -30,7 +30,7 @@ pip install -r requirements.txt
 ```
 
 ## Запуск проекта
-Перейти в директорию yatube_api:
+Перейти в директорию api_yamdb:
 
 ```bash
 cd api_yamdb
