@@ -109,7 +109,7 @@ class MyUserSerializer(serializers.ModelSerializer):
     """
     
     email = serializers.RegexField(
-        regex=r'^[\w.\-]{1,25}@[\w.\-]{1,25}\.[\w]{1,25}',
+        regex=r'^[\w.\-]{1,25}@[\w.\-]+\.[\w]+',
         max_length=254,
         required=True,
         validators=[
