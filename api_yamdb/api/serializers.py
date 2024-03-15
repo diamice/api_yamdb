@@ -147,8 +147,6 @@ class MyUserSerializer(serializers.ModelSerializer):
             return Response(
                 {"username": ["Это поле не может быть пустым."]},
                 status=status.HTTP_400_BAD_REQUEST
-                # 'Поле "username" не может быть пустым.'
-                # 'оно не соответствует требованиям'
             )
 
         return value
@@ -163,10 +161,6 @@ class MyUserSerializer(serializers.ModelSerializer):
                 {"email": ["Это поле не может быть пустым."]},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            # raise serializers.ValidationError(
-            #     'Поле "email" не можеты быть пустым.'
-            #     # 'оно не соответствует требованиям'
-            # )
 
         return value
 
@@ -224,12 +218,3 @@ class MyUserRegistered(serializers.ModelSerializer):
                 'другая электронная почта.'
             )
         return data
-
-    # def validate_email(self, value):
-    #     username = self.context['request'].data.get('username')
-    #     user = MyUser.objects.get(username=username)
-    #     if value != user.email:
-    #         raise serializers.ValidationError(
-    #             f'Для пользователя {username} зарегистрирована '
-    #             'другая электронная почта.'
-    #         )

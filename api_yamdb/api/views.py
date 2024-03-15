@@ -11,14 +11,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Title, Genre, MyUser, Reviews
-from .permissions import (IsAdmin, IsUAuthenticatedAndPatchMethod,
-                          IsAuthorAdminModeratorOrReadOnly, ReadOrAdminOnly)
+from .permissions import (
+    IsAdmin, IsAuthorAdminModeratorOrReadOnly, ReadOrAdminOnly)
 from .serializers import (
     CategorySerializer, TitleSerializer, GenreSerializer,
     MyUserRegistered, MyUserRegistration, MyUserUsersSerializer,
     MyUserUsersMePatchSerializer, ReviewsSerializer, CommentsSerializer)
 from .filters import TitleFilter
-from .viewsets import CreateViewSet, ListCreateViewSet, RetievePatchViewSet, CreateDestroyListViewSet
+from .viewsets import (
+    CreateViewSet, RetievePatchViewSet, CreateDestroyListViewSet)
 from .permissions import IsAuthorAdminModeratorOrReadOnly
 
 
@@ -156,22 +157,6 @@ class UsersMeViewSet(RetievePatchViewSet):
     def update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return super().update(request, *args, **kwargs)
-    
-    # def update(self, request, *args, **kwargs):
-    #     partial = kwargs.pop('partial', False)
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(
-    #         instance, data=request.data, partial=partial)
-    #     serializer.initial_data['username'] = instance.username
-    #     serializer.initial_data['email'] = instance.email
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_update(serializer)
-
-    #     if getattr(instance, '_prefetched_objects_cache', None):
-    #         instance._prefetched_objects_cache = {}
-
-    #     return Response(serializer.data)
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
