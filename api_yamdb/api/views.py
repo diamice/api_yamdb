@@ -2,14 +2,13 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Title, Genre, MyUser, Review
 from .permissions import (IsAdmin, IsUAuthenticatedAndPatchMethod,
@@ -19,7 +18,8 @@ from .serializers import (
     MyUserRegistered, MyUserRegistration, MyUserUsersSerializer,
     ReviewSerializer, CommentSerializer)
 from .filters import TitleFilter
-from .viewsets import CreateViewSet, ListCreateViewSet, RetievePatchViewSet, CreateDestroyListViewSet
+from .viewsets import (
+    CreateViewSet, RetievePatchViewSet, CreateDestroyListViewSet)
 from .permissions import IsAuthorAdminModeratorOrReadOnly
 
 
@@ -105,7 +105,8 @@ class CreateUserViewSet(CreateViewSet):
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
         else:
-            serializer.is_valid(raise_exception=True)
+            serializer.validate(data=serializer.initial_data)
+            serializer._validated_data = serializer.initial_data
 
         headers = self.get_success_headers(serializer.data)
         user = get_object_or_404(MyUser.objects.all(), username=username)
@@ -121,7 +122,7 @@ class CreateUserViewSet(CreateViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK,
                         headers=headers)
-
+    
     def perform_create(self, serializer):
         serializer.save(
             role='user',
@@ -133,19 +134,29 @@ class UsersViewSet(viewsets.ModelViewSet):
     queryset = MyUser.objects.all()
     serializer_class = MyUserUsersSerializer
     permission_classes = (IsAdmin,)
-    pagination_class = LimitOffsetPagination
+    pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
+    lookup_field = 'username'
     search_fields = ('username',)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
 
 class UsersMeViewSet(RetievePatchViewSet):
     serializer_class = MyUserUsersSerializer
     permission_classes = (IsAuthenticated,)
 
+    def get_serializer_class(self):
+        if self.action == 'update':
+            return MyUserUsersMePatchSerializer
+        return MyUserUsersSerializer
+
     def get_object(self):
         return get_object_or_404(MyUser.objects.all(),
                                  username=self.request.user.username)
-
+    
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -156,12 +167,20 @@ def get_token(request):
 
     username = request.data.get('username')
     code = request.data.get('confirmation_code')
+
+    if username is None:
+        return Response(
+            {"username": "Обязательное поле"},
+            status=status.HTTP_400_BAD_REQUEST
+    )
+
     user = get_object_or_404(MyUser, username=username)
 
     if default_token_generator.check_token(user, code):
         token = AccessToken.for_user(user)
         user.is_active = True
         user.save()
-        return Response({"token": f"{token}"}, status.HTTP_200_OK)
+        return Response(
+            {"token": f"{token}"}, status=status.HTTP_200_OK)
 
-    return Response(status.HTTP_400_BAD_REQUEST)
+    return Response(status=status.HTTP_400_BAD_REQUEST)

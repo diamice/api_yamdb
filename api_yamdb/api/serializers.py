@@ -103,8 +103,9 @@ class MyUserSerializer(serializers.ModelSerializer):
     """
     Общая модель для сериализаторов работы с пользователями.
     """
-
-    email = serializers.CharField(
+    
+    email = serializers.RegexField(
+        regex=r'^[\w.\-]{1,25}@[\w.\-]+\.[\w]+',
         max_length=254,
         required=True,
         validators=[
@@ -135,33 +136,27 @@ class MyUserSerializer(serializers.ModelSerializer):
                 'Нельзя использовать "me" в качестве "username"')
 
         if (
-                not self.context['request'].data.get('username')
-                or self.context['request'].data.get('username') == ''
-                or self.context['request'].data.get('username') == None
+            not self.context['request'].data.get('username')
+            or self.context['request'].data.get('username') == ''
+            or self.context['request'].data.get('username') == None
         ):
             return Response(
                 {"username": ["Это поле не может быть пустым."]},
                 status=status.HTTP_400_BAD_REQUEST
-                # 'Поле "username" не может быть пустым.'
-                # 'оно не соответствует требованиям'
             )
 
         return value
 
     def validate_email(self, value):
         if (
-                not self.context['request'].data.get('email')
-                or self.context['request'].data.get('email') == ''
-                or self.context['request'].data.get('email') == None
+            not self.context['request'].data.get('email')
+            or self.context['request'].data.get('email') == ''
+            or self.context['request'].data.get('email') == None
         ):
             return Response(
                 {"email": ["Это поле не может быть пустым."]},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            # raise serializers.ValidationError(
-            #     'Поле "email" не можеты быть пустым.'
-            #     # 'оно не соответствует требованиям'
-            # )
 
         return value
 
@@ -175,6 +170,17 @@ class MyUserUsersSerializer(MyUserSerializer):
         model = MyUser
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
+        
+
+class MyUserUsersMePatchSerializer(MyUserSerializer):
+    """
+    Сериализирует данные для эндпоинта api/users/.
+    """
+
+    class Meta:
+        model = MyUser
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio')
 
 
 class MyUserRegistration(MyUserSerializer):
@@ -195,15 +201,16 @@ class MyUserRegistration(MyUserSerializer):
 
 
 class MyUserRegistered(serializers.ModelSerializer):
+
     class Meta:
         model = MyUser
         fields = ('email', 'username')
 
-    def validate_email(self, value):
-        username = self.context['request'].data.get('username')
-        user = MyUser.objects.get(username=username)
-        if value != user.email:
+    def validate(self, data):
+        user = MyUser.objects.get(username=data['username'])
+        if data['email'] != user.email:
             raise serializers.ValidationError(
-                f'Для пользователя {username} зарегистрирована '
+                f'Для пользователя {user.username} зарегистрирована '
                 'другая электронная почта.'
             )
+        return data
