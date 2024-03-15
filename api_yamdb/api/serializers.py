@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
@@ -71,6 +72,19 @@ class ReviewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reviews
         fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
+
+    def validate(self, data):
+        if self.context['request'].method != 'POST':
+            return data
+        title = get_object_or_404(
+            Title, pk=self.context['view'].kwargs.get('title_id')
+        )
+        author = self.context['request'].user
+        if Reviews.objects.filter(title_id=title, author=author).exists():
+            raise serializers.ValidationError(
+                'Отзыв уже оставлен'
+            )
+        return data
 
 
 class CommentsSerializer(serializers.ModelSerializer):
