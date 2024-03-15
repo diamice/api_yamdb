@@ -82,6 +82,17 @@ class MyUserUsersSerializer(MyUserSerializer):
         model = MyUser
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
+        
+
+class MyUserUsersMePatchSerializer(MyUserSerializer):
+    """
+    Сериализирует данные для эндпоинта api/users/.
+    """
+
+    class Meta:
+        model = MyUser
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio')
 
 
 class MyUserRegistration(MyUserSerializer):

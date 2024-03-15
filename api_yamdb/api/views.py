@@ -3,7 +3,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
@@ -11,7 +11,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Categories, Titles, Genres, MyUser
 from .permissions import IsAdmin, IsUAuthenticatedAndPatchMethod
 from .serializers import (MyUserRegistered, MyUserRegistration,
-                          MyUserUsersSerializer)
+                          MyUserUsersSerializer, MyUserUsersMePatchSerializer)
 from .viewsets import CreateViewSet, ListCreateViewSet, RetievePatchViewSet
 
 
@@ -80,18 +80,44 @@ class UsersViewSet(viewsets.ModelViewSet):
     queryset = MyUser.objects.all()
     serializer_class = MyUserUsersSerializer
     permission_classes = (IsAdmin,)
-    pagination_class = LimitOffsetPagination
+    pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
+    lookup_field = 'username'
     search_fields = ('username',)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
 
 class UsersMeViewSet(RetievePatchViewSet):
     serializer_class = MyUserUsersSerializer
     permission_classes = (IsAuthenticated,)
 
+    def get_serializer_class(self):
+        if self.action == 'update':
+            return MyUserUsersMePatchSerializer
+        return MyUserUsersSerializer
+
     def get_object(self):
         return get_object_or_404(MyUser.objects.all(),
                                  username=self.request.user.username)
+    
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
+    
+    # def update(self, request, *args, **kwargs):
+    #     partial = kwargs.pop('partial', False)
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(
+    #         instance, data=request.data, partial=partial)
+    #     serializer.initial_data['username'] = instance.username
+    #     serializer.initial_data['email'] = instance.email
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_update(serializer)
+
+    #     if getattr(instance, '_prefetched_objects_cache', None):
+    #         instance._prefetched_objects_cache = {}
+
+    #     return Response(serializer.data)
 
 
 @api_view(['POST'])
