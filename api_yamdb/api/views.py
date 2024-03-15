@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from django_filters.rest_framework import DjangoFilterBackend
 
-from reviews.models import Category, Title, Genre, MyUser
+from reviews.models import Category, Title, Genre, MyUser, Reviews
 from .permissions import (IsAdmin, IsUAuthenticatedAndPatchMethod,
                           IsAuthorAdminModeratorOrReadOnly, ReadOrAdminOnly)
 from .serializers import (
@@ -53,7 +53,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Отзывов."""
     serializer_class = ReviewsSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
-    pagination_class = LimitOffsetPagination
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -69,7 +69,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Комментариев."""
     serializer_class = CommentsSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
-    pagination_class = LimitOffsetPagination
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
         return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
