@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     CategoryViewSet, CreateUserViewSet, GenreViewSet, get_token,
-    ReviewsViewSet, TitleViewSet, UsersViewSet, UsersMeViewSet, CommentsViewSet
+    ReviewViewSet, TitleViewSet, UsersViewSet, UsersMeViewSet, CommentViewSet
 )
 
 router_v1 = DefaultRouter()
@@ -12,12 +12,12 @@ router_v1.register('genres', GenreViewSet, basename='genres')
 router_v1.register('titles', TitleViewSet, basename='titles')
 router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
-    ReviewsViewSet,
+    ReviewViewSet,
     basename='reviews'
 )
 router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
-    CommentsViewSet,
+    CommentViewSet,
     basename='comments',
 )
 router_v1.register('users', UsersViewSet, basename='users')

@@ -3,7 +3,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 
-from reviews.models import MyUser, Title, Genre, Category, Reviews, Comments
+from reviews.models import MyUser, Title, Genre, Category, Review, Comment
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -57,7 +57,7 @@ class TitleSerializer(serializers.ModelSerializer):
         return representation
 
 
-class ReviewsSerializer(serializers.ModelSerializer):
+class ReviewSerializer(serializers.ModelSerializer):
     """Сериалайзер для модели Отзывов"""
     author = serializers.SlugRelatedField(
         slug_field='username',
@@ -70,7 +70,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Reviews
+        model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
 
     def validate(self, data):
@@ -80,14 +80,14 @@ class ReviewsSerializer(serializers.ModelSerializer):
             Title, pk=self.context['view'].kwargs.get('title_id')
         )
         author = self.context['request'].user
-        if Reviews.objects.filter(title_id=title, author=author).exists():
+        if Review.objects.filter(title_id=title, author=author).exists():
             raise serializers.ValidationError(
                 'Отзыв уже оставлен'
             )
         return data
 
 
-class CommentsSerializer(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     """Сериалайзер для модели Комментариев"""
     author = serializers.SlugRelatedField(
         slug_field='username',
@@ -95,7 +95,7 @@ class CommentsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Comments
+        model = Comment
         fields = ('id', 'text', 'author', 'pub_date')
 
 

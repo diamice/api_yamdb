@@ -71,7 +71,7 @@ class TitleGenre(models.Model):
         return f'{self.title} - {self.genre}'
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     """Модель отзывов"""
     text = models.TextField(
         verbose_name='Текст отзыва',
@@ -112,10 +112,10 @@ class Reviews(models.Model):
         return self.text
 
 
-class Comments(models.Model):
+class Comment(models.Model):
     """Модель комментариев"""
     review = models.ForeignKey(
-        Reviews,
+        Review,
         on_delete=models.CASCADE,
         verbose_name='Отзыв',
         related_name='comments'
