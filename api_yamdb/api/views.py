@@ -16,7 +16,7 @@ from .permissions import (IsAdmin, IsUAuthenticatedAndPatchMethod,
 from .serializers import (
     CategorySerializer, TitleSerializer, GenreSerializer,
     MyUserRegistered, MyUserRegistration, MyUserUsersSerializer,
-    ReviewSerializer, CommentSerializer)
+    ReviewSerializer, CommentSerializer, MyUserUsersMePatchSerializer)
 from .filters import TitleFilter
 from .viewsets import (
     CreateViewSet, RetievePatchViewSet, CreateDestroyListViewSet)
@@ -134,7 +134,6 @@ class UsersViewSet(viewsets.ModelViewSet):
     queryset = MyUser.objects.all()
     serializer_class = MyUserUsersSerializer
     permission_classes = (IsAdmin,)
-    pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'username'
     search_fields = ('username',)
