@@ -10,13 +10,13 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Title, Genre, MyUser, Reviews
-from .permissions import (
-    IsAdmin, IsAuthorAdminModeratorOrReadOnly, ReadOrAdminOnly)
+from reviews.models import Category, Title, Genre, MyUser, Review
+from .permissions import (IsAdmin, IsUAuthenticatedAndPatchMethod,
+                          IsAuthorAdminModeratorOrReadOnly, ReadOrAdminOnly)
 from .serializers import (
     CategorySerializer, TitleSerializer, GenreSerializer,
     MyUserRegistered, MyUserRegistration, MyUserUsersSerializer,
-    MyUserUsersMePatchSerializer, ReviewsSerializer, CommentsSerializer)
+    ReviewSerializer, CommentSerializer)
 from .filters import TitleFilter
 from .viewsets import (
     CreateViewSet, RetievePatchViewSet, CreateDestroyListViewSet)
@@ -49,11 +49,11 @@ class TitleViewSet(viewsets.ModelViewSet):
         return Title.objects.annotate(rating=Avg('reviews__score'))
 
 
-class ReviewsViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Отзывов."""
-    serializer_class = ReviewsSerializer
+    serializer_class = ReviewSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
-    pagination_class = LimitOffsetPagination
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -65,14 +65,14 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, title=self.get_title())
 
 
-class CommentsViewSet(viewsets.ModelViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Комментариев."""
-    serializer_class = CommentsSerializer
+    serializer_class = CommentSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
-    pagination_class = LimitOffsetPagination
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
-        return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
+        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
 
     def get_queryset(self):
         return self.get_review().comments.select_related('author')
