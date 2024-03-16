@@ -103,7 +103,6 @@ class MyUserSerializer(serializers.ModelSerializer):
     """
     Общая модель для сериализаторов работы с пользователями.
     """
-    
     email = serializers.RegexField(
         regex=r'^[\w.\-]{1,25}@[\w.\-]+\.[\w]+',
         max_length=254,
@@ -138,7 +137,7 @@ class MyUserSerializer(serializers.ModelSerializer):
         if (
             not self.context['request'].data.get('username')
             or self.context['request'].data.get('username') == ''
-            or self.context['request'].data.get('username') == None
+            or self.context['request'].data.get('username') is None
         ):
             return Response(
                 {"username": ["Это поле не может быть пустым."]},
@@ -151,7 +150,7 @@ class MyUserSerializer(serializers.ModelSerializer):
         if (
             not self.context['request'].data.get('email')
             or self.context['request'].data.get('email') == ''
-            or self.context['request'].data.get('email') == None
+            or self.context['request'].data.get('email') is None
         ):
             return Response(
                 {"email": ["Это поле не может быть пустым."]},
@@ -170,7 +169,7 @@ class MyUserUsersSerializer(MyUserSerializer):
         model = MyUser
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
-        
+
 
 class MyUserUsersMePatchSerializer(MyUserSerializer):
     """

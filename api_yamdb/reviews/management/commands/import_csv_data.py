@@ -1,10 +1,7 @@
 import csv
 import os
-from django.db import models
-from django.db.models.fields.related import ForeignKey, ManyToManyField
 
-from django.core.management.base import BaseCommand, CommandError
-from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 from django.apps import apps
 
 from api_yamdb.settings import BASE_DIR
@@ -30,18 +27,13 @@ class Command(BaseCommand):
                 for row in reader:
                     row_obj = model()
                     for field in row:
-                        # print([fields.name for fields in model._meta.fields if type(fields) == ForeignKey or type(fields) == ManyToManyField])
-                        # print(field)
                         if hasattr(row_obj, field + '_id'):
                             setattr(row_obj, field + '_id', row.get(field))
                         else:
                             setattr(row_obj, field, row.get(field))
-                        # print(hasattr(model, field + '_id'), field, isinstance(field + '_id', ForeignKey))
-                        # model_fields = [field.name for field in model._meta.get_fields()]
-                        # print(*[(hasattr(model, field), field) for field in row])
-                        # print(hasattr(model, field), field)
-                    print(row_obj)
                     row_obj.save()
-                self.stdout.write(f'Данные из модели {model} успешно импортированы')
-        except FileNotFoundError as error:
-            self.stdout.write(f'Файл с указанным названием {filename} не найден')
+                self.stdout.write(f'Данные для модели {model} '
+                                  f'успешно импортированы')
+        except FileNotFoundError:
+            self.stdout.write(f'Файл с указанным названием {filename}'
+                              f' не найден')

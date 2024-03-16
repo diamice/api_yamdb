@@ -4,23 +4,23 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Title, Genre, MyUser, Review
-from .permissions import (IsAdmin, IsUAuthenticatedAndPatchMethod,
+from .permissions import (IsAdmin, IsAuthorAdminModeratorOrReadOnly,
                           IsAuthorAdminModeratorOrReadOnly, ReadOrAdminOnly)
-from .serializers import (
-    CategorySerializer, TitleSerializer, GenreSerializer,
-    MyUserRegistered, MyUserRegistration, MyUserUsersSerializer,
-    ReviewSerializer, CommentSerializer, MyUserUsersMePatchSerializer)
+from .serializers import (CategorySerializer, TitleSerializer,
+                          GenreSerializer, MyUserRegistered,
+                          MyUserRegistration, MyUserUsersSerializer,
+                          ReviewSerializer, CommentSerializer,
+                          MyUserUsersMePatchSerializer)
 from .filters import TitleFilter
-from .viewsets import (
-    CreateViewSet, RetievePatchViewSet, CreateDestroyListViewSet)
-from .permissions import IsAuthorAdminModeratorOrReadOnly
+from .viewsets import (CreateViewSet, RetievePatchViewSet,
+                       CreateDestroyListViewSet)
 
 
 class CategoryViewSet(CreateDestroyListViewSet):
@@ -122,7 +122,7 @@ class CreateUserViewSet(CreateViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK,
                         headers=headers)
-    
+
     def perform_create(self, serializer):
         serializer.save(
             role='user',
@@ -152,10 +152,11 @@ class UsersMeViewSet(RetievePatchViewSet):
     def get_object(self):
         return get_object_or_404(MyUser.objects.all(),
                                  username=self.request.user.username)
-    
+
     def update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return super().update(request, *args, **kwargs)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -171,7 +172,7 @@ def get_token(request):
         return Response(
             {"username": "Обязательное поле"},
             status=status.HTTP_400_BAD_REQUEST
-    )
+        )
 
     user = get_object_or_404(MyUser, username=username)
 
