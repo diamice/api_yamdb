@@ -4,6 +4,7 @@ from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from .validators import validate_slug
+from .constans import LIMIT_TEXT_CONSTANT
 
 ROLES_CHOICES = (
     ('admin', 'администратор'),
@@ -136,10 +137,10 @@ class Review(models.Model):
         auto_now_add=True,
         verbose_name='Дата публикации',
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10),
+            MinValueValidator(1, 'Оценка не может быть меньше 1'),
+            MaxValueValidator(10, 'Оценка не может быть больше 10'),
         ],
         verbose_name='Оценка',
     )
@@ -154,7 +155,7 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return self.text
+        return self.text[:LIMIT_TEXT_CONSTANT]
 
 
 class Comment(models.Model):
@@ -169,6 +170,7 @@ class Comment(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор комментария',
+        related_name='author'
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
@@ -182,4 +184,4 @@ class Comment(models.Model):
         ordering = ['-pub_date']
 
     def __str__(self):
-        return self.text
+        return self.text[:LIMIT_TEXT_CONSTANT]
