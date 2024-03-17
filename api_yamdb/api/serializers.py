@@ -11,7 +11,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('name', 'slug')
+        exclude = ('id', )
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -19,7 +19,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        exclude = ('id', )
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -34,15 +34,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category'
-        )
+        fields = '__all__'
 
     def to_representation(self, instance):
         """Данные о категории и жанре для ответа."""

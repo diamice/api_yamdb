@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
+
 from .validators import validate_slug
 from .constans import LIMIT_TEXT_CONSTANT
 
@@ -130,6 +131,7 @@ class Review(models.Model):
     )
     author = models.ForeignKey(
         User,
+        related_name='author',
         on_delete=models.CASCADE,
         verbose_name='Автор',
     )
