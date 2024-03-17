@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
-from .validators import validate_slug
+
 from .constans import LIMIT_TEXT_CONSTANT
 
 ROLES_CHOICES = (
@@ -37,7 +37,6 @@ class Category(models.Model):
         verbose_name='Категория'
     )
     slug = models.SlugField(
-        validators=[validate_slug],
         unique=True,
         max_length=50,
         verbose_name='slug категории'
@@ -53,8 +52,7 @@ class Genre(models.Model):
         max_length=256,
         verbose_name='Жанр'
     )
-    slug = models.CharField(
-        validators=[validate_slug],
+    slug = models.SlugField(
         unique=True,
         max_length=50,
         verbose_name='slug жанра'
@@ -130,6 +128,7 @@ class Review(models.Model):
     )
     author = models.ForeignKey(
         User,
+        related_name='review',
         on_delete=models.CASCADE,
         verbose_name='Автор',
     )
@@ -170,7 +169,7 @@ class Comment(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор комментария',
-        related_name='author'
+        related_name='comment'
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
