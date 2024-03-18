@@ -4,7 +4,7 @@ from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-from .constans import LIMIT_TEXT_CONSTANT
+from .constants import LIMIT_TEXT_CONSTANT
 
 
 User = get_user_model()

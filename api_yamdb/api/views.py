@@ -20,8 +20,7 @@ from .serializers import (CategorySerializer, TitleSerializer,
                           ReviewSerializer, CommentSerializer,
                           UsersMePatchSerializer)
 from .filters import TitleFilter
-from .viewsets import (CreateViewSet, RetievePatchViewSet,
-                       CreateDestroyListViewSet)
+from .viewsets import CreateDestroyListViewSet
 
 
 class CategoryViewSet(CreateDestroyListViewSet):
