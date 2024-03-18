@@ -144,7 +144,7 @@ class UserRegistration(UserSerializer):
 
 class UserRegistered(serializers.Serializer):
     """
-    Сериализатор для получения кода подтверждения зарегистрированным 
+    Сериализатор для получения кода подтверждения зарегистрированным
     ранее пользователем.
     """
     username = serializers.CharField(max_length=150)

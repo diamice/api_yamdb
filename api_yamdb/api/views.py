@@ -96,8 +96,10 @@ class UsersViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def me(self, request):
-        user = get_object_or_404(User.objects.all(),
-                                    username=request.user.username)
+        user = get_object_or_404(
+            User.objects.all(),
+            username=request.user.username
+        )
         if request._request.method == 'GET':
             serializer = self.get_serializer(user)
             return Response(serializer.data)
