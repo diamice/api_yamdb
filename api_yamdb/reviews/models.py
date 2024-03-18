@@ -6,26 +6,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 from .constans import LIMIT_TEXT_CONSTANT
 
-ROLES_CHOICES = (
-    ('admin', 'администратор'),
-    ('moderator', 'модератор'),
-    ('user', 'пользователь')
-)
-
-
-class MyUser(AbstractUser):
-    role = models.CharField(
-        'Роль',
-        max_length=16,
-        choices=ROLES_CHOICES,
-        default='user'
-    )
-    bio = models.TextField(
-        'Биография',
-        null=True,
-        blank=True
-    )
-
 
 User = get_user_model()
 
