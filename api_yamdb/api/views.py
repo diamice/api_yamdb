@@ -3,24 +3,24 @@ from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Title, Genre, MyUser, Review
-from .permissions import (IsAdmin, IsAuthorAdminModeratorOrReadOnly,
+from reviews.models import Category, Title, Genre, Review
+from users.models import User
+from .permissions import (IsAdmin,
                           IsAuthorAdminModeratorOrReadOnly, ReadOrAdminOnly)
 from .serializers import (CategorySerializer, TitleSerializer,
-                          GenreSerializer, MyUserRegistered,
-                          MyUserRegistration, MyUserUsersSerializer,
+                          GenreSerializer, UserRegistered,
+                          UserRegistration, UsersSerializer,
                           ReviewSerializer, CommentSerializer,
-                          MyUserUsersMePatchSerializer)
+                          UsersMePatchSerializer)
 from .filters import TitleFilter
-from .viewsets import (CreateViewSet, RetievePatchViewSet,
-                       CreateDestroyListViewSet)
+from .viewsets import CreateDestroyListViewSet
 
 
 class CategoryViewSet(CreateDestroyListViewSet):
@@ -81,81 +81,31 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=self.get_review())
 
 
-class CreateUserViewSet(CreateViewSet):
-    """
-    Создает нового пользователя через API (эндпоинт api/v1/auth/signup/).
-    """
-
-    queryset = MyUser.objects.all()
-    serializer_class = MyUserRegistration
-    permission_classes = (AllowAny,)
-
-    def get_serializer_class(self):
-        username = self.request.data.get('username')
-        if MyUser.objects.filter(username=username).exists():
-            return MyUserRegistered
-        return MyUserRegistration
-
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
-        username = request.data.get('username')
-        email = request.data.get('email')
-
-        if not MyUser.objects.filter(username=username).exists():
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-        else:
-            serializer.validate(data=serializer.initial_data)
-            serializer._validated_data = serializer.initial_data
-
-        headers = self.get_success_headers(serializer.data)
-        user = get_object_or_404(MyUser.objects.all(), username=username)
-        code = default_token_generator.make_token(user)
-
-        send_mail(
-            subject='Код аутентификации для yamdb',
-            message=f'username: {username}, confirmation_code:{code}',
-            from_email='registration@yamdb.not',
-            recipient_list=[email],
-            fail_silently=False,
-        )
-
-        return Response(serializer.data, status=status.HTTP_200_OK,
-                        headers=headers)
-
-    def perform_create(self, serializer):
-        serializer.save(
-            role='user',
-            is_active=False
-        )
-
-
 class UsersViewSet(viewsets.ModelViewSet):
-    queryset = MyUser.objects.all()
-    serializer_class = MyUserUsersSerializer
+    queryset = User.objects.all()
+    serializer_class = UsersSerializer
     permission_classes = (IsAdmin,)
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'username'
     search_fields = ('username',)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
-
-class UsersMeViewSet(RetievePatchViewSet):
-    serializer_class = MyUserUsersSerializer
-    permission_classes = (IsAuthenticated,)
-
-    def get_serializer_class(self):
-        if self.action == 'update':
-            return MyUserUsersMePatchSerializer
-        return MyUserUsersSerializer
-
-    def get_object(self):
-        return get_object_or_404(MyUser.objects.all(),
-                                 username=self.request.user.username)
-
-    def update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-        return super().update(request, *args, **kwargs)
+    @action(
+        detail=False,
+        methods=['get', 'patch'],
+        permission_classes=(IsAuthenticated,)
+    )
+    def me(self, request):
+        user = get_object_or_404(User.objects.all(),
+                                    username=request.user.username)
+        if request._request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+        serializer = UsersMePatchSerializer(
+            user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
 
 @api_view(['POST'])
@@ -170,17 +120,52 @@ def get_token(request):
 
     if username is None:
         return Response(
-            {"username": "Обязательное поле"},
+            {'username': 'Обязательное поле'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    user = get_object_or_404(MyUser, username=username)
+    user = get_object_or_404(User, username=username)
 
     if default_token_generator.check_token(user, code):
         token = AccessToken.for_user(user)
         user.is_active = True
         user.save()
         return Response(
-            {"token": f"{token}"}, status=status.HTTP_200_OK)
+            {'token': f'{token}'}, status=status.HTTP_200_OK)
 
     return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_user(request):
+    """
+    Создает нового пользователя через API (эндпоинт api/v1/auth/signup/).
+    """
+    username = request.data.get('username')
+    email = request.data.get('email')
+    if User.objects.filter(username=username).exists():
+        serializer = UserRegistered(data=request.data)
+        serializer.is_valid(raise_exception=True)
+    else:
+        serializer = UserRegistration(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(
+                role='user',
+                is_active=False
+            )
+
+    user = get_object_or_404(User.objects.all(), username=username)
+    code = default_token_generator.make_token(user)
+
+    send_mail(
+        subject='Код аутентификации для yamdb',
+        message=f'username: {username}, confirmation_code:{code}',
+        from_email='registration@yamdb.not',
+        recipient_list=[email],
+        fail_silently=False,
+    )
+
+    if serializer.errors:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.data, status=status.HTTP_200_OK)

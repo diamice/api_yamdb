@@ -3,27 +3,8 @@ from django.db import models
 from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
-from .validators import validate_slug
 
-ROLES_CHOICES = (
-    ('admin', 'администратор'),
-    ('moderator', 'модератор'),
-    ('user', 'пользователь')
-)
-
-
-class MyUser(AbstractUser):
-    role = models.CharField(
-        'Роль',
-        max_length=16,
-        choices=ROLES_CHOICES,
-        default='user'
-    )
-    bio = models.TextField(
-        'Биография',
-        null=True,
-        blank=True
-    )
+from .constants import LIMIT_TEXT_CONSTANT
 
 
 User = get_user_model()
@@ -36,7 +17,6 @@ class Category(models.Model):
         verbose_name='Категория'
     )
     slug = models.SlugField(
-        validators=[validate_slug],
         unique=True,
         max_length=50,
         verbose_name='slug категории'
@@ -52,8 +32,7 @@ class Genre(models.Model):
         max_length=256,
         verbose_name='Жанр'
     )
-    slug = models.CharField(
-        validators=[validate_slug],
+    slug = models.SlugField(
         unique=True,
         max_length=50,
         verbose_name='slug жанра'
@@ -129,6 +108,7 @@ class Review(models.Model):
     )
     author = models.ForeignKey(
         User,
+        related_name='review',
         on_delete=models.CASCADE,
         verbose_name='Автор',
     )
@@ -136,10 +116,10 @@ class Review(models.Model):
         auto_now_add=True,
         verbose_name='Дата публикации',
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10),
+            MinValueValidator(1, 'Оценка не может быть меньше 1'),
+            MaxValueValidator(10, 'Оценка не может быть больше 10'),
         ],
         verbose_name='Оценка',
     )
@@ -154,7 +134,7 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return self.text
+        return self.text[:LIMIT_TEXT_CONSTANT]
 
 
 class Comment(models.Model):
@@ -169,6 +149,7 @@ class Comment(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор комментария',
+        related_name='comment'
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
@@ -182,4 +163,4 @@ class Comment(models.Model):
         ordering = ['-pub_date']
 
     def __str__(self):
-        return self.text
+        return self.text[:LIMIT_TEXT_CONSTANT]
