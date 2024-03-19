@@ -41,6 +41,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Произведений."""
     serializer_class = TitleSerializer
     permission_classes = [ReadOrAdminOnly]
+    # PUT запрос для этого представления не предусмотрен
     http_method_names = ['get', 'post', 'patch', 'delete']
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -53,6 +54,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Отзывов."""
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
+    # PUT запрос для этого представления не предусмотрен
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_title(self):
@@ -69,6 +71,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet для модели Комментариев."""
     serializer_class = CommentSerializer
     permission_classes = [IsAuthorAdminModeratorOrReadOnly]
+    # PUT запрос для этого представления не предусмотрен
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
@@ -88,6 +91,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'username'
     search_fields = ('username',)
+    # PUT запрос для этого представления не предусмотрен
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
