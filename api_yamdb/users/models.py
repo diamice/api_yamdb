@@ -6,6 +6,7 @@ ROLES_CHOICES = (
     ('moderator', 'модератор'),
     ('user', 'пользователь')
 )
+
 ADMIN = 'admin'
 MODERATOR = 'moderator'
 
