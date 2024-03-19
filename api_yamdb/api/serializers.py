@@ -91,7 +91,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'pub_date')
 
 
-class UserSerializer(serializers.ModelSerializer):
+class CommonUserSerializer(serializers.ModelSerializer):
     """
     Общая модель для сериализаторов работы с пользователями.
     """
@@ -103,7 +103,7 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
 
-class UsersSerializer(UserSerializer):
+class UsersSerializer(CommonUserSerializer):
     """
     Сериализатор для управления информацией о пользователе.
     """
@@ -114,7 +114,7 @@ class UsersSerializer(UserSerializer):
                   'last_name', 'bio', 'role')
 
 
-class UsersMePatchSerializer(UserSerializer):
+class UsersMePatchSerializer(CommonUserSerializer):
     """
     Сериализатор для редактирования своих данных пользователем.
     """
@@ -125,7 +125,7 @@ class UsersMePatchSerializer(UserSerializer):
                   'last_name', 'bio')
 
 
-class UserRegistration(UserSerializer):
+class UserRegistration(CommonUserSerializer):
     """
     Сериализатор для создания пользователя.
     """

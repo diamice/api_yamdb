@@ -6,6 +6,8 @@ ROLES_CHOICES = (
     ('moderator', 'модератор'),
     ('user', 'пользователь')
 )
+ADMIN = 'admin'
+MODERATOR = 'moderator'
 
 
 class User(AbstractUser):
@@ -29,7 +31,7 @@ class User(AbstractUser):
     )
 
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == ADMIN
 
     def is_moderator(self):
-        return self.role == 'moderator'
+        return self.role == MODERATOR
