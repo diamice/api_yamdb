@@ -1,9 +1,9 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers, status
-from rest_framework.response import Response
-from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
+from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
-from reviews.models import MyUser, Title, Genre, Category, Review, Comment
+from reviews.models import Title, Genre, Category, Review, Comment
+from users.models import User
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -11,7 +11,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('name', 'slug')
+        exclude = ('id', )
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -19,7 +19,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        exclude = ('id', )
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -34,15 +34,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category'
-        )
+        fields = '__all__'
 
     def to_representation(self, instance):
         """Данные о категории и жанре для ответа."""
@@ -99,114 +91,67 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'pub_date')
 
 
-class MyUserSerializer(serializers.ModelSerializer):
+class CommonUserSerializer(serializers.ModelSerializer):
     """
     Общая модель для сериализаторов работы с пользователями.
     """
-    email = serializers.RegexField(
-        regex=r'^[\w.\-]{1,25}@[\w.\-]+\.[\w]+',
-        max_length=254,
-        required=True,
-        validators=[
-            UniqueValidator(
-                queryset=MyUser.objects.all(),
-                message=(
-                    'Пользователь с данной электронной почтой '
-                    'уже зарегистрирован.'
-                )
-            )
-        ]
-    )
-    username = serializers.RegexField(
-        regex=r'^[\w.@+-]+\Z',
-        max_length=150,
-        required=True,
-        validators=[
-            UniqueValidator(
-                queryset=MyUser.objects.all(),
-                message='Пользователь с данным username уже зарегистрирован.'
-            )
-        ]
-    )
-
     def validate_username(self, value):
         if value == 'me':
             raise serializers.ValidationError(
                 'Нельзя использовать "me" в качестве "username"')
 
-        if (
-            not self.context['request'].data.get('username')
-            or self.context['request'].data.get('username') == ''
-            or self.context['request'].data.get('username') is None
-        ):
-            return Response(
-                {"username": ["Это поле не может быть пустым."]},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        return value
-
-    def validate_email(self, value):
-        if (
-            not self.context['request'].data.get('email')
-            or self.context['request'].data.get('email') == ''
-            or self.context['request'].data.get('email') is None
-        ):
-            return Response(
-                {"email": ["Это поле не может быть пустым."]},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         return value
 
 
-class MyUserUsersSerializer(MyUserSerializer):
+class UsersSerializer(CommonUserSerializer):
     """
-    Сериализирует данные для эндпоинта api/users/.
+    Сериализатор для управления информацией о пользователе.
     """
 
     class Meta:
-        model = MyUser
+        model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
 
 
-class MyUserUsersMePatchSerializer(MyUserSerializer):
+class UsersMePatchSerializer(CommonUserSerializer):
     """
-    Сериализирует данные для эндпоинта api/users/.
+    Сериализатор для редактирования своих данных пользователем.
     """
 
     class Meta:
-        model = MyUser
+        model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio')
 
 
-class MyUserRegistration(MyUserSerializer):
+class UserRegistration(CommonUserSerializer):
     """
-    Сериализует данные для эндпоинта api/v1/auth/signup/.
+    Сериализатор для создания пользователя.
     """
 
     class Meta:
-        model = MyUser
+        model = User
         fields = ('email', 'username')
         validators = [
             UniqueTogetherValidator(
-                queryset=MyUser.objects.all(),
+                queryset=User.objects.all(),
                 fields=('email', 'username'),
                 message='Пользователь уже зарегистрирован.'
             )
         ]
 
 
-class MyUserRegistered(serializers.ModelSerializer):
-
-    class Meta:
-        model = MyUser
-        fields = ('email', 'username')
+class UserRegistered(serializers.Serializer):
+    """
+    Сериализатор для получения кода подтверждения зарегистрированным 
+    ранее пользователем.
+    """
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(max_length=254)
 
     def validate(self, data):
-        user = MyUser.objects.get(username=data['username'])
+        user = User.objects.get(username=data['username'])
         if data['email'] != user.email:
             raise serializers.ValidationError(
                 f'Для пользователя {user.username} зарегистрирована '

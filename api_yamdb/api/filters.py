@@ -1,14 +1,14 @@
-from django_filters import rest_framework
+from django_filters import rest_framework as filters
 
 from reviews.models import Title
 
 
-class TitleFilter(rest_framework.FilterSet):
+class TitleFilter(filters.FilterSet):
     """Фильтрация для модели Titles."""
-    name = rest_framework.CharFilter(field_name='name')
-    year = rest_framework.NumberFilter(field_name='year')
-    genre = rest_framework.CharFilter(field_name='genre__slug')
-    category = rest_framework.CharFilter(field_name='category__slug')
+    name = filters.CharFilter(field_name='name')
+    year = filters.NumberFilter(field_name='year')
+    genre = filters.CharFilter(field_name='genre__slug')
+    category = filters.CharFilter(field_name='category__slug')
 
     class Meta:
         model = Title
